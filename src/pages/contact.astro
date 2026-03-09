@@ -91,12 +91,12 @@ import DefaultSiteLayout from "@/components/layout/DefaultSiteLayout.astro";
         <div slot="left" class="pl-0 lg:pl-10">
           <h3 class="text-xl pb-4">The Adpharm Inc.</h3>
           <iframe
-            width="310"
-            height="275"
-            class="mb-4"
-            style="border:0"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2896.7107848380188!2d-79.67284792320402!3d43.44575596582212!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b5c918ff80095%3A0xf5086ac65984ac91!2sAdpharm%20Inc!5e0!3m2!1sen!2sca!4v1773083032092!5m2!1sen!2sca"
+            class="mb-4 w-full aspect-[4/3]"
+            style="border:0;"
+            allowfullscreen=""
             loading="lazy"
-            src={`https://www.google.com/maps/embed/v1/place?key=${process.env.GOOGLE_API}&q=The+Adpharm,Oakville+ON`}
+            referrerpolicy="no-referrer-when-downgrade"
           ></iframe>
           <p class="text-lg">133 Thomas Street</p>
           <p class="text-zinc-400">Oakville, Ontario</p>
