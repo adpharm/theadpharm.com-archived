@@ -15,7 +15,7 @@
     "@ai-sdk/openai": "^1.0.10",
     "@astrojs/react": "^4.1.0",
     "@astrojs/tailwind": "^5.1.3",
-    "@astrojs/vercel": "^8.0.0",
+    "@astrojs/vercel": "^9.0.4",
     "@auth/core": "^0.37.4",
     "@fontsource-variable/playpen-sans": "^5.1.0",
     "@fontsource/dseg14-modern": "^5.1.0",
