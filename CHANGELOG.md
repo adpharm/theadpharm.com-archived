@@ -2,6 +2,8 @@
 
 ## 2026-03-09
 
+- feat: Added `robots.txt` blocking API routes and internal paths, and a manually-maintained `sitemap.xml` covering all public pages to improve SEO crawlability
+
 - feat: Contact form includes a honeypot field to silently discard bot submissions without revealing the check to spammers
 - feat: Contact form now submits to a local `/api/contact` endpoint that validates input and delivers email via the `@cdv2/email` service, replacing the old external data-collector integration
 - feat: Contact form displays inline success and error states after submission instead of silently resetting

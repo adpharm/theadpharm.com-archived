@@ -144,9 +144,13 @@ export default function ContactForm() {
           {...register("message", { required: true })}
           id="message"
           name="message"
-          rows={4}
           required
-          className="mt-1 block w-full bg-black border border-zinc-800 py-2 px-3 text-white focus:outline-none focus:border-orange-500"
+          onInput={(e) => {
+            const el = e.currentTarget;
+            el.style.height = "auto";
+            el.style.height = `${el.scrollHeight}px`;
+          }}
+          className="mt-1 block w-full bg-black border border-zinc-800 py-2 px-3 text-white focus:outline-none focus:border-orange-500 min-h-24 resize-none overflow-hidden"
         ></textarea>
         {errors.message && (
           <p className="text-xs pl-1 pt-1 text-left text-red-500">
