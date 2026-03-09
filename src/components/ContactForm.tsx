@@ -14,8 +14,7 @@ export default function ContactForm() {
     resolver: zodResolver(contactSchema),
   });
 
-  const [success, setSuccess] = useState(false);
-  const [failure, setFailure] = useState(false);
+  const [status, setStatus] = useState<"idle" | "success" | "failure">("idle");
 
   const onSubmit = async (data: ContactFormData) => {
     try {
@@ -27,17 +26,17 @@ export default function ContactForm() {
 
       if (!res.ok) throw new Error("Network response was not ok");
 
-      setSuccess(true);
+      setStatus("success");
       reset();
     } catch (error) {
       console.error("Error:", error);
-      setFailure(true);
+      setStatus("failure");
     }
   };
 
-  if (success) {
+  if (status === "success") {
     return (
-      <div className="space-y-6 w-full max-w-md border border-zinc-800 p-6">
+      <div className="space-y-6 w-full max-w-lg border border-zinc-800 p-6">
         <h2 className="text-xl mb-4">Thank you!</h2>
         <p className="text-zinc-400">
           We've received your message and will be in touch soon.
@@ -46,9 +45,9 @@ export default function ContactForm() {
     );
   }
 
-  if (failure) {
+  if (status === "failure") {
     return (
-      <div className="space-y-6 w-full max-w-md border border-zinc-800 p-6">
+      <div className="space-y-6 w-full max-w-lg border border-zinc-800 p-6">
         <h2 className="text-xl mb-4">Something went wrong</h2>
         <p className="text-zinc-400">
           Please try again or email us directly at{" "}
@@ -66,6 +65,12 @@ export default function ContactForm() {
       className="space-y-6 w-full max-w-lg border border-zinc-800 p-6"
       onSubmit={handleSubmit(onSubmit)}
     >
+      {/* Honeypot — visually hidden, not reachable by keyboard or screen readers. Bots fill it; real users never will. */}
+      <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", top: "auto", width: "1px", height: "1px", overflow: "hidden" }}>
+        <label htmlFor="website">Website</label>
+        <input type="text" id="website" name="website" tabIndex={-1} autoComplete="off" />
+      </div>
+
       <h2 className="text-xl mb-4">Get in touch</h2>
       <div>
         <label htmlFor="firstName" className="block text-zinc-400">
@@ -108,7 +113,6 @@ export default function ContactForm() {
           type="text"
           id="organization"
           name="organization"
-          required
           className="mt-1 block w-full bg-black border border-zinc-800 py-2 px-3 text-white focus:outline-none focus:border-orange-500"
         />
       </div>
