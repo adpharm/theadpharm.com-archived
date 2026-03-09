@@ -8,6 +8,7 @@ vars:
 
 dotenv:
   - .env
+  - .env.vercel
 
 tasks:
   default:
@@ -44,40 +45,48 @@ tasks:
 
   ########################################################################################################################
   #
-  #                                        App commands
+  #                                        Development commands
   #
   ########################################################################################################################
 
-  # --------------------------------------------------------------------------------------------------------------------
-  # Start commands
-  # --------------------------------------------------------------------------------------------------------------------
   start:
+    desc: Start the development server
     cmds:
-      # - bun start
       - bunx --bun astro dev
 
   # --------------------------------------------------------------------------------------------------------------------
-  # Install commands
+  # Build — all or individual
   # --------------------------------------------------------------------------------------------------------------------
-  install:
-    vars:
-      packages: "{{.CLI_ARGS}}"
+  build:
+    desc: Build the project
     cmds:
-      - bun install {{.packages | default ""}}
-
+      - bunx --bun astro build
   # --------------------------------------------------------------------------------------------------------------------
-  # Migration commands
+  # Typecheck — all or individual
   # --------------------------------------------------------------------------------------------------------------------
-  drizzle-push:
-    aliases:
-      - push
-    interactive: true
+  typecheck:
+    desc: Run TypeScript checks
     cmds:
-      - bunx drizzle-kit push
+      - bun run typecheck
 
   # --------------------------------------------------------------------------------------------------------------------
   # Other commands
   # --------------------------------------------------------------------------------------------------------------------
+
+  # pull dev env from vercel
+  env:
+    aliases:
+      - pull-env
+      - pull
+    interactive: true
+    cmds:
+      - bunx vercel env pull .env.vercel
+
+  link:
+    desc: Link to Vercel project
+    interactive: true
+    cmds:
+      - bunx vercel link
 
   ########################################################################################################################
   #
@@ -85,25 +94,177 @@ tasks:
   #
   ########################################################################################################################
 
+  _validate-env:
+    internal: true
+    requires:
+      vars:
+        - ENV
+    cmds:
+      - |
+        case "{{.ENV}}" in
+          production|staging) ;;
+          *) echo "Error: ENV must be 'production' or 'staging', got: '{{.ENV}}'"; exit 1 ;;
+        esac
+
   # `terraform init`
   tfinit:
-    dir: terraform
+    desc: Initialize Terraform (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
     cmds:
-      - terraform init
+      - task: _validate-env
+      - terragrunt init {{.CLI_ARGS}}
 
   # `terragrunt plan`
   tfplan:
-    dir: terraform
+    desc: Run Terragrunt plan (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
     deps:
       - check-aws-identity
+    dir: infra/live/{{.ENV}}
     cmds:
-      - terragrunt plan
+      - task: _validate-env
+      - task: tfplan:shared
+      - terragrunt plan {{.CLI_ARGS}}
 
-  # `terragrunt apply`
-  tfapply:
-    interactive: true
-    dir: terraform
+  tfplan:shared:
+    desc: Run Terragrunt plan for shared infrastructure
     deps:
       - check-aws-identity
+    dir: infra/live/shared
     cmds:
-      - terragrunt apply
+      - terragrunt plan {{.CLI_ARGS}}
+
+  # `terragrunt apply` — always applies shared first, then env
+  tfapply:
+    desc: Apply shared then specified ENV (required)
+    interactive: true
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - |
+        printf "Rebuild lambdas before applying? (y/N): "
+        read rebuild
+        if [[ "$rebuild" =~ ^[Yy]$ ]]; then
+          task build
+        fi
+      - task: tfapply:shared
+      - terragrunt apply {{.CLI_ARGS}}
+
+  tfapply:shared:
+    desc: Apply shared infrastructure only
+    internal: true
+    interactive: true
+    dir: infra/live/shared
+    cmds:
+      - terragrunt apply {{.CLI_ARGS}}
+
+  # `terragrunt destroy`
+  tfdestroy:
+    desc: Run Terragrunt destroy (ENV=production|staging required)
+    interactive: true
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terragrunt destroy {{.CLI_ARGS}}
+
+  # `terragrunt import`
+  tfimport:
+    desc: Run Terragrunt import (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terragrunt import {{.CLI_ARGS}}
+
+  # `terraform state list`
+  tflist:
+    desc: List Terraform state (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terraform state list
+
+  # `terragrunt refresh`
+  tfrefresh:
+    desc: Run Terragrunt refresh (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terragrunt refresh
+
+  # Show outputs for a specific environment
+  tfoutput:
+    desc: Show Terraform outputs (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terragrunt output {{.CLI_ARGS}}
+
+  # Save terraform outputs to JSON file
+  save-outputs:
+    desc: Save Terraform outputs to JSON file (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terragrunt output -json > ../../../terraform-outputs-{{.ENV}}.json
+      - echo "Saved {{.ENV}} terraform outputs to terraform-outputs-{{.ENV}}.json"
+
+  # Validate Terraform configuration
+  tfvalidate:
+    desc: Validate Terraform configuration (ENV=production|staging required)
+    requires:
+      vars:
+        - ENV
+    deps:
+      - check-aws-identity
+    dir: infra/live/{{.ENV}}
+    cmds:
+      - task: _validate-env
+      - terragrunt validate {{.CLI_ARGS}}
+
+  # Format Terraform files
+  tffmt:
+    desc: Format Terraform files
+    cmds:
+      - terraform fmt -recursive infra/

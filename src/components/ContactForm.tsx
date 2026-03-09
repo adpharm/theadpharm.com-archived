@@ -1,17 +1,8 @@
 import { useForm } from "react-hook-form";
-import React from "react";
-import { object, z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
-
-const formSchema = z.object({
-  firstName: z.string().min(1, { message: "First name is required" }),
-  lastName: z.string().optional(),
-  email: z.string().email({ message: "Invalid email address" }),
-  organization: z.string().optional(),
-  message: z.string().min(1, { message: "Message is required" }),
-});
+import { contactSchema, type ContactFormData } from "@/lib/schema.contact";
 
 export default function ContactForm() {
   const {
@@ -19,52 +10,29 @@ export default function ContactForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-  } = useForm({
-    resolver: zodResolver(formSchema),
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
   });
 
   const [success, setSuccess] = useState(false);
   const [failure, setFailure] = useState(false);
 
-  const onSubmit = async (data: any) => {
-    console.log(data);
-
-    // generate a unique ID for the form submission
-    const formSubmissionId = Math.random().toString(36).substring(2, 15);
-
-    // setShowAgreementModal(true);
-
+  const onSubmit = async (data: ContactFormData) => {
     try {
-      const res = await fetch("https://data-collector.theadpharm.com/capture", {
+      const res = await fetch("/api/contact", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...data,
-          formSubmissionId,
-          type: "thedpharm_get_in_touch",
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
 
-      console.log(res);
-
-      if (!res.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      const response = await res.json();
+      if (!res.ok) throw new Error("Network response was not ok");
 
       setSuccess(true);
+      reset();
     } catch (error) {
       console.error("Error:", error);
       setFailure(true);
     }
-
-    // setShowAgreementModal(false);
-
-    // closeModal();
-    reset();
   };
 
   return (
