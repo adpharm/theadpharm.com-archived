@@ -1,77 +1,87 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-  "name": "Ubuntu",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  // "image": "mcr.microsoft.com/devcontainers/base:jammy",
+  "name": "theadpharm.com",
   "build": {
-    // Path is relative to the devcontainer.json file.
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "args": {
+      "TZ": "${localEnv:TZ:America/New_York}"
+    }
   },
-
-  // Features to add to the dev container. More info: https://containers.dev/features.
+  // all features added manually
   "features": {
-    // "ghcr.io/devcontainers-extra/features/go-task": {},
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "v22.11.0",
+      "nodeGypDependencies": true,
+      "installYarnUsingApt": true,
+      "version": "lts",
       "nvmVersion": "latest"
     },
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "moby": true,
-      "azureDnsAutoDetection": true,
-      "installDockerBuildx": true,
-      "installDockerComposeSwitch": true,
-      "version": "latest",
-      "dockerDashComposeVersion": "latest"
-    },
-    "ghcr.io/devcontainers/features/python:1": {
-      "installTools": true,
-      "version": "3.12"
-    },
-    // "ghcr.io/devcontainers-extra/features/age:1": {
-    //   "version": "v1.2.0"
+    // "ghcr.io/devcontainers/features/python:1": {
+    //   "installTools": true,
+    //   "version": "3.12"
     // },
-    // "ghcr.io/devcontainers-extra/features/sops:1": {},
     // "ghcr.io/swift-server-community/swift-devcontainer-features/sqlite:1": {},
-    // "ghcr.io/devcontainers/features/aws-cli:1": {},
-    "ghcr.io/eitsupi/devcontainer-features/go-task:1": {},
+    // "ghcr.io/devcontainers/features/docker-in-docker:2": {
+    //   "moby": true,
+    //   "azureDnsAutoDetection": true,
+    //   "installDockerBuildx": true,
+    //   "installDockerComposeSwitch": true,
+    //   "version": "latest",
+    //   "dockerDashComposeVersion": "latest"
+    // },
     "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/eitsupi/devcontainer-features/go-task:1": {},
     "ghcr.io/devcontainers/features/terraform:1": {}
   },
-
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
-
-  // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "bash -i ./.devcontainer/scripts/postCreate.sh",
-  "postCreateCommand": "echo 'eval \"$(task --completion bash)\"' >> ~/.profile",
-
-  // Configure tool-specific properties.
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
   "customizations": {
     "vscode": {
       "extensions": [
+        "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "yoavbls.pretty-ts-errors",
         "eamodio.gitlens",
+        // added
+        "HashiCorp.HCL",
+        "yoavbls.pretty-ts-errors",
+        "anthropic.claude-code",
+        // "continue.continue",
         "bradlc.vscode-tailwindcss",
-        // "IronGeek.vscode-env",
-        // "foxundermoon.shell-format",
-        "ms-azuretools.vscode-docker",
-        "astro-build.astro-vscode",
-        "mikestead.dotenv",
-        "oven.bun-vscode",
-        "HashiCorp.HCL"
-      ]
+        "heybourn.headwind",
+        // astro
+        "astro-build.astro-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+          },
+          "zsh": {
+            "path": "zsh"
+          }
+        }
+      }
     }
   },
-
+  // "remoteUser": "node",
   "mounts": [
-    // mount the .aws folder to the container
+    "source=claude-code-bashhistory,target=/commandhistory,type=volume",
+    "source=claude-code-config,target=/home/vscode/.claude,type=volume",
+    // Mount the host's .aws directory into the container for AWS CLI access
     "source=${localEnv:HOME}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached",
-    // mount ssh keys to the container
+    // Mount the host's ssh directory into the container for SSH access
     "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
-  ]
-
-  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  // "remoteUser": "root"
+  ],
+  "remoteEnv": {
+    // "NODE_OPTIONS": "--max-old-space-size=4096",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude",
+    "POWERLEVEL9K_DISABLE_GITSTATUS": "true",
+    // increase the max output tokens for claude code from 32000 to 64000
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": 64000
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace",
+  // "postCreateCommand": "sudo /usr/local/bin/init-firewall.sh"
+  "postCreateCommand": "bash .devcontainer/post-create.sh"
 }

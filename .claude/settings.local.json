@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(task push)",
+      "Bash(task db:push)",
+      "Bash(task db-push)",
+      "Bash(task tfapply)",
+      "Bash(terragrunt apply)",
+      "Bash(terraform apply)"
+    ],
+    "ask": [
+      "Bash(rm *)"
+    ]
+  }
+}
