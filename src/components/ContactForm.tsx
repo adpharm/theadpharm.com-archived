@@ -35,9 +35,35 @@ export default function ContactForm() {
     }
   };
 
+  if (success) {
+    return (
+      <div className="space-y-6 w-full max-w-md border border-zinc-800 p-6">
+        <h2 className="text-xl mb-4">Thank you!</h2>
+        <p className="text-zinc-400">
+          We've received your message and will be in touch soon.
+        </p>
+      </div>
+    );
+  }
+
+  if (failure) {
+    return (
+      <div className="space-y-6 w-full max-w-md border border-zinc-800 p-6">
+        <h2 className="text-xl mb-4">Something went wrong</h2>
+        <p className="text-zinc-400">
+          Please try again or email us directly at{" "}
+          <a href="mailto:amy@theadpharm.com" className="text-white underline">
+            amy@theadpharm.com
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
   return (
     <form
-      className="space-y-6 w-full max-w-md border border-zinc-800 p-6"
+      className="space-y-6 w-full max-w-lg border border-zinc-800 p-6"
       onSubmit={handleSubmit(onSubmit)}
     >
       <h2 className="text-xl mb-4">Get in touch</h2>

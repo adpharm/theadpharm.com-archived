@@ -34,26 +34,27 @@ export const POST: APIRoute = async ({ request }): Promise<Response> => {
     const { firstName, lastName, email, organization, message } = parsed.data;
     const fullName = [firstName, lastName].filter(Boolean).join(" ");
 
+    const metaRows = [
+      `<strong>From:</strong> ${escapeHtml(fullName)} &lt;${escapeHtml(email)}&gt;`,
+      organization ? `<strong>Org:</strong> ${escapeHtml(organization)}` : null,
+      `<strong>Source:</strong> theadpharm.com contact form`,
+    ].filter(Boolean).map((row) => `<p style="font-size:12px;color:#888;margin:0">${row}</p>`).join("");
+
     const html = `
-      <h2>New Contact Form Submission</h2>
-      <p><strong>Name:</strong> ${escapeHtml(fullName)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-      ${organization ? `<p><strong>Organization:</strong> ${escapeHtml(organization)}</p>` : ""}
-      <p><strong>Message:</strong></p>
-      <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+      <div style="margin-bottom:16px">${metaRows}</div>
+      <p style="white-space:pre-wrap">${escapeHtml(message)}</p>
     `;
 
     const text = [
-      `Name: ${fullName}`,
-      `Email: ${email}`,
+      `From: ${fullName} <${email}>`,
       organization ? `Organization: ${organization}` : null,
-      `Message:\n${message}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+      `Source: theadpharm.com contact form`,
+      ``,
+      message,
+    ].filter((l) => l !== null).join("\n");
 
     const { error } = await emailClient.send({
-      from: "hi@hq.theadpharm.com",
+      from: "theadpharm.com <hi@hq.theadpharm.com>",
       to: "ben@theadpharm.com",
       subject: `Contact form: ${fullName}`,
       html,
